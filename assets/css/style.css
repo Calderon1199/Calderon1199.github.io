@@ -452,6 +452,12 @@ section {
   flex-direction: row;
 }
 
+@media screen and (max-width: 690px) {
+  .front-end-languages {
+    flex-direction: column
+  }
+}
+
 .languages {
   display: flex;
   justify-content: space-evenly;
