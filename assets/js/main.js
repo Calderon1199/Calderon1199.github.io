@@ -1,262 +1,149 @@
-/**
-* Template Name: iPortfolio
-* Updated: Jan 09 2024 with Bootstrap v5.3.2
-* Template URL: https://bootstrapmade.com/iportfolio-bootstrap-portfolio-websites-template/
-* Author: BootstrapMade.com
-* License: https://bootstrapmade.com/license/
-*/
-(function() {
+(function () {
   "use strict";
 
-  /**
-   * Easy selector helper function
-   */
-  const select = (el, all = false) => {
-    el = el.trim()
-    if (all) {
-      return [...document.querySelectorAll(el)]
-    } else {
-      return document.querySelector(el)
-    }
-  }
+  const body = document.body;
+  const root = document.documentElement;
 
-  /**
-   * Easy event listener function
-   */
-  const on = (type, el, listener, all = false) => {
-    let selectEl = select(el, all)
-    if (selectEl) {
-      if (all) {
-        selectEl.forEach(e => e.addEventListener(type, listener))
+  /* ---------------------------------------------------------------------
+     Theme: system preference by default, explicit choice persisted.
+     The pre-paint script in <head> has already applied any stored value.
+     --------------------------------------------------------------------- */
+
+  const themeToggle = document.querySelector("[data-theme-toggle]");
+  const systemDark = window.matchMedia("(prefers-color-scheme: dark)");
+
+  const readStored = () => {
+    try {
+      const stored = localStorage.getItem("theme");
+      return stored === "dark" || stored === "light" ? stored : null;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const activeTheme = () => root.getAttribute("data-theme") || (systemDark.matches ? "dark" : "light");
+
+  /* Browsers use the FIRST theme-color whose media matches, so an explicit
+     choice needs an unscoped meta inserted ahead of the media-scoped pair.
+     With no explicit choice we remove it and let those two do their job. */
+  const syncThemeColor = () => {
+    const explicit = root.getAttribute("data-theme");
+    let override = document.querySelector('meta[name="theme-color"][data-theme-override]');
+
+    if (!explicit) {
+      if (override) {
+        override.remove();
+      }
+      return;
+    }
+
+    if (!override) {
+      override = document.createElement("meta");
+      override.setAttribute("name", "theme-color");
+      override.setAttribute("data-theme-override", "");
+      const first = document.querySelector('meta[name="theme-color"]');
+      if (first) {
+        first.parentNode.insertBefore(override, first);
       } else {
-        selectEl.addEventListener(type, listener)
+        document.head.appendChild(override);
       }
     }
-  }
 
-  /**
-   * Easy on scroll event listener 
-   */
-  const onscroll = (el, listener) => {
-    el.addEventListener('scroll', listener)
-  }
+    override.setAttribute("content", explicit === "dark" ? "#12120f" : "#fbfaf7");
+  };
 
-  /**
-   * Navbar links active state on scroll
-   */
-  let navbarlinks = select('#navbar .scrollto', true)
-  const navbarlinksActive = () => {
-    let position = window.scrollY + 200
-    navbarlinks.forEach(navbarlink => {
-      if (!navbarlink.hash) return
-      let section = select(navbarlink.hash)
-      if (!section) return
-      if (position >= section.offsetTop && position <= (section.offsetTop + section.offsetHeight)) {
-        navbarlink.classList.add('active')
-      } else {
-        navbarlink.classList.remove('active')
-      }
-    })
-  }
-  window.addEventListener('load', navbarlinksActive)
-  onscroll(document, navbarlinksActive)
+  const syncToggle = () => {
+    syncThemeColor();
 
-  /**
-   * Scrolls to an element with header offset
-   */
-  const scrollto = (el) => {
-    let elementPos = select(el).offsetTop
-    window.scrollTo({
-      top: elementPos,
-      behavior: 'smooth'
-    })
-  }
-
-  /**
-   * Back to top button
-   */
-  let backtotop = select('.back-to-top')
-  if (backtotop) {
-    const toggleBacktotop = () => {
-      if (window.scrollY > 100) {
-        backtotop.classList.add('active')
-      } else {
-        backtotop.classList.remove('active')
-      }
+    if (!themeToggle) {
+      return;
     }
-    window.addEventListener('load', toggleBacktotop)
-    onscroll(document, toggleBacktotop)
-  }
 
-  /**
-   * Mobile nav toggle
-   */
-  on('click', '.mobile-nav-toggle', function(e) {
-    select('body').classList.toggle('mobile-nav-active')
-    this.classList.toggle('bi-list')
-    this.classList.toggle('bi-x')
-  })
+    const next = activeTheme() === "dark" ? "light" : "dark";
+    themeToggle.setAttribute("aria-label", "Switch to " + next + " theme");
+  };
 
-  /**
-   * Scrool with ofset on links with a class name .scrollto
-   */
-  on('click', '.scrollto', function(e) {
-    if (select(this.hash)) {
-      e.preventDefault()
+  if (themeToggle) {
+    themeToggle.addEventListener("click", () => {
+      const next = activeTheme() === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", next);
 
-      let body = select('body')
-      if (body.classList.contains('mobile-nav-active')) {
-        body.classList.remove('mobile-nav-active')
-        let navbarToggle = select('.mobile-nav-toggle')
-        navbarToggle.classList.toggle('bi-list')
-        navbarToggle.classList.toggle('bi-x')
-      }
-      scrollto(this.hash)
-    }
-  }, true)
+      try {
+        localStorage.setItem("theme", next);
+      } catch (e) { /* private mode: choice applies for this page view only */ }
 
-  /**
-   * Scroll with ofset on page load with hash links in the url
-   */
-  window.addEventListener('load', () => {
-    if (window.location.hash) {
-      if (select(window.location.hash)) {
-        scrollto(window.location.hash)
-      }
-    }
-  });
-
-  /**
-   * Hero type effect
-   */
-  const typed = select('.typed')
-  if (typed) {
-    let typed_strings = typed.getAttribute('data-typed-items')
-    typed_strings = typed_strings.split(',')
-    new Typed('.typed', {
-      strings: typed_strings,
-      loop: true,
-      typeSpeed: 100,
-      backSpeed: 50,
-      backDelay: 2000
+      syncToggle();
     });
   }
 
-  /**
-   * Skills animation
-   */
-  let skilsContent = select('.skills-content');
-  if (skilsContent) {
-    new Waypoint({
-      element: skilsContent,
-      offset: '80%',
-      handler: function(direction) {
-        let progress = select('.progress .progress-bar', true);
-        progress.forEach((el) => {
-          el.style.width = el.getAttribute('aria-valuenow') + '%'
-        });
-      }
-    })
+  // Follow the OS only while the visitor has not made an explicit choice.
+  const onSystemChange = () => {
+    if (!readStored()) {
+      root.removeAttribute("data-theme");
+      syncToggle();
+    }
+  };
+
+  if (typeof systemDark.addEventListener === "function") {
+    systemDark.addEventListener("change", onSystemChange);
+  } else if (typeof systemDark.addListener === "function") {
+    systemDark.addListener(onSystemChange);
   }
 
-  /**
-   * Porfolio isotope and filter
-   */
-  window.addEventListener('load', () => {
-    let portfolioContainer = select('.portfolio-container');
-    if (portfolioContainer) {
-      let portfolioIsotope = new Isotope(portfolioContainer, {
-        itemSelector: '.portfolio-item'
+  syncToggle();
+
+  const menuToggle = document.querySelector(".menu-toggle");
+  const nav = document.querySelector(".masthead__nav");
+  const navLinks = Array.from(document.querySelectorAll(".masthead__nav a"));
+
+  // Only anchor links map to sections. A PDF or external href must not reach querySelector.
+  const sections = navLinks
+    .map((link) => {
+      const href = link.getAttribute("href");
+      return href && href.startsWith("#") ? document.querySelector(href) : null;
+    })
+    .filter(Boolean);
+
+  const closeNav = () => {
+    body.classList.remove("nav-open");
+    if (menuToggle) {
+      menuToggle.setAttribute("aria-expanded", "false");
+    }
+  };
+
+  if (menuToggle && nav) {
+    menuToggle.addEventListener("click", () => {
+      const isOpen = body.classList.toggle("nav-open");
+      menuToggle.setAttribute("aria-expanded", String(isOpen));
+    });
+
+    navLinks.forEach((link) => link.addEventListener("click", closeNav));
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeNav();
+      }
+    });
+  }
+
+  if (sections.length) {
+    const setActiveLink = () => {
+      const marker = window.scrollY + window.innerHeight * 0.3;
+      let activeId = "";
+
+      sections.forEach((section) => {
+        if (marker >= section.offsetTop) {
+          activeId = section.id;
+        }
       });
 
-      let portfolioFilters = select('#portfolio-flters li', true);
+      navLinks.forEach((link) => {
+        link.classList.toggle("is-active", link.getAttribute("href") === "#" + activeId);
+      });
+    };
 
-      on('click', '#portfolio-flters li', function(e) {
-        e.preventDefault();
-        portfolioFilters.forEach(function(el) {
-          el.classList.remove('filter-active');
-        });
-        this.classList.add('filter-active');
-
-        portfolioIsotope.arrange({
-          filter: this.getAttribute('data-filter')
-        });
-        portfolioIsotope.on('arrangeComplete', function() {
-          AOS.refresh()
-        });
-      }, true);
-    }
-
-  });
-
-  /**
-   * Initiate portfolio lightbox 
-   */
-  const portfolioLightbox = GLightbox({
-    selector: '.portfolio-lightbox'
-  });
-
-  /**
-   * Portfolio details slider
-   */
-  new Swiper('.portfolio-details-slider', {
-    speed: 400,
-    loop: true,
-    autoplay: {
-      delay: 5000,
-      disableOnInteraction: false
-    },
-    pagination: {
-      el: '.swiper-pagination',
-      type: 'bullets',
-      clickable: true
-    }
-  });
-
-  /**
-   * Testimonials slider
-   */
-  new Swiper('.testimonials-slider', {
-    speed: 600,
-    loop: true,
-    autoplay: {
-      delay: 5000,
-      disableOnInteraction: false
-    },
-    slidesPerView: 'auto',
-    pagination: {
-      el: '.swiper-pagination',
-      type: 'bullets',
-      clickable: true
-    },
-    breakpoints: {
-      320: {
-        slidesPerView: 1,
-        spaceBetween: 20
-      },
-
-      1200: {
-        slidesPerView: 3,
-        spaceBetween: 20
-      }
-    }
-  });
-
-  /**
-   * Animation on scroll
-   */
-  window.addEventListener('load', () => {
-    AOS.init({
-      duration: 1000,
-      easing: 'ease-in-out',
-      once: true,
-      mirror: false
-    })
-  });
-
-  /**
-   * Initiate Pure Counter 
-   */
-  new PureCounter();
-
-})()
+    setActiveLink();
+    window.addEventListener("scroll", setActiveLink, { passive: true });
+    window.addEventListener("resize", setActiveLink);
+  }
+})();
