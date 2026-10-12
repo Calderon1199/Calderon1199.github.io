@@ -236,7 +236,6 @@ h4 {
 }
 
 /* Small caps label, used sparingly: section meta and field names */
-.status,
 .project__meta,
 .facts dt,
 .role__years,
@@ -476,21 +475,6 @@ h4 {
 
 .hero {
   padding: clamp(64px, 10vw, 128px) 0 clamp(56px, 7vw, 96px);
-}
-
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  margin: 0 0 28px;
-  color: var(--ink-2);
-}
-
-.status__dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
 }
 
 .hero__title {
